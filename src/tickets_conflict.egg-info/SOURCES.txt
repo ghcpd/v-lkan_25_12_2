@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/tickets_conflict/__init__.py
+src/tickets_conflict/cli.py
+src/tickets_conflict/io.py
+src/tickets_conflict/logic.py
+src/tickets_conflict.egg-info/PKG-INFO
+src/tickets_conflict.egg-info/SOURCES.txt
+src/tickets_conflict.egg-info/dependency_links.txt
+src/tickets_conflict.egg-info/top_level.txt
+tests/test_conflict_detection.py

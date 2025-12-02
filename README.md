@@ -1,1 +1,74 @@
-# v-lkan_25_12_2
+# Multi-Annotator Dataset Conflict Detection
+
+## Overview
+Detects annotation conflicts, explains disagreements, and suggests resolved labels for ticket datasets with multiple annotators.
+
+## Input schema
+Each line in `tickets_label.jsonl`:
+```json
+{"id": "<unique_id>", "text": "<text>", "annotations": [{"annotator": "A1", "intent": "...", "urgency": "..."}, ...]}
+```
+
+## Output schema (per record)
+```json
+{
+  "id": "<id>",
+  "text": "<text>",
+  "labels": [
+    {"annotator": "A1", "intent": "...", "urgency": "...", "label": "intent=..., urgency=..."},
+    ...
+  ],
+  "is_conflict": true/false,
+  "conflict_reason": "<reason or null>",
+  "suggested_label": {
+    "intent": "<resolved_intent>",
+    "urgency": "<resolved_urgency>",
+    "majority_label": {"intent": "<majority_intent>", "urgency": "<majority_urgency>"},
+    "confidence": "high|medium|low",
+    "confidence_reason": "<why>",
+    "explanation": "<heuristics used or null>"
+  }
+}
+```
+
+## Heuristics
+- **Conflict**: intents or urgencies differ among annotators.
+- **Reasoning**: reports which dimensions disagree; suggests ambiguity/multiple aspects.
+- **Resolution**:
+  - Majority vote per dimension.
+  - Ties broken via keyword heuristics:
+    - `bug_report`: crash, error, fail, blank screen, won't open
+    - `billing_issue`: payment, refund, charged, billing
+    - `subscription_issue`: subscription, renew, cancel, benefits, activated
+    - `account_issue`: account, login, password, verification, locked, delete
+    - `general_inquiry`: how, what, when, know, policy, inquire, plan, features, promotions, return
+  - Urgency keywords: `critical` (crash/error/failed/blank), `high` (urgent/immediately/assist/unlock)
+  - Confidence: high (unanimous), medium (majority), low (heuristics/ties).
+
+## Usage
+```bash
+# Setup (Unix)
+./setup.sh
+
+# Setup (Windows cmd)
+setup.bat
+
+# Run CLI
+python -m tickets_conflict.cli --input tickets_label.jsonl --output output/all.jsonl
+python -m tickets_conflict.cli --input tickets_label.jsonl --output output/conflicts.jsonl --conflicts-only
+```
+
+## Tests
+```bash
+pytest -q
+```
+
+## Docker
+```bash
+docker build -t tickets-conflict .
+docker run --rm -v %cd%/output:/app/output tickets-conflict \
+    --input /app/tickets_label.jsonl --output /app/output/all.jsonl
+```
+
+## Reports
+See `reports/test_report_template.md` for test summary template.
